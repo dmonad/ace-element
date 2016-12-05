@@ -1,0 +1,212 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<script type="text/javascript" src="../ace-builds/src-min-noconflict/ace.js"></script>
+
+<!--
+# &lt;ace-element&gt;  <iframe src="https://ghbtns.com/github-btn.html?user=dmonad&repo=ace-element&type=star&count=true" frameborder="0" scrolling="0" width="170px" height="20px"></iframe>
+
+Polymer Web Component of the awesome [Ace](https://ace.c9.io/#nav=about) editor!
+
+```
+bower i --save ace-element
+```
+
+This element exposes often used configurations as properties. You can access the ace instance like this:
+
+```javascript
+// element.ace exposes the ace javascript instance
+document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
+```
+
+@demo demo/index.html
+-->
+
+<dom-module id="ace-element">
+  <template>
+    <style>
+      :host {
+        position: relative;
+        display: block;
+        height: 100px;
+        width: 100%;
+      }
+      
+      #editorContainer {
+        position: absolute;
+        top: 0;
+        right: 0;
+        left: 0;
+        bottom: 0;
+      }
+    </style>
+    <div id="editorContainer"><content /></div>
+  </template>
+
+  <script>
+    Polymer({
+      ready: function () {
+        this.ace = ace.edit(this.$.editorContainer)
+        var self = this
+        if (this.yText != null) {
+          this.bindYText(this.yText)
+        }
+        this._setTheme()
+        this._setMode()
+        this._setShowInvisibles()
+        this._setShowLineNumbers()
+        this._setFontSize()
+        this._setReadOnly()
+      },
+      detached: function () {
+        if (this.ace != null && this.ace.yTextBinding != null) {
+          this.ace.yTextBinding.unbindAceAll()
+        }
+      },
+      is: 'ace-element',
+      properties: {
+        /**
+         * The Ace theme. E.g. Ambiance, Chrome, ..
+         * List of all themes [here](https://github.com/ajaxorg/ace/tree/master/lib/ace/theme)
+         */
+        theme: {
+          type: String,
+          notify: true,
+          observer: '_setTheme'
+        },
+        /**
+         * Editor mode. E.g. JavaScript, Go, C 
+         */
+        mode: {
+          type: String,
+          notify: true,
+          observer: '_setMode'
+        },
+        /**
+         * Set font size in pixel
+         */
+        fontSize: {
+          type: Number,
+          notify: true,
+          observer: '_setFontSize'
+        },
+        /**
+         * Whether this instance is read-only
+         */
+        readOnly: {
+          type: Boolean,
+          notify: true,
+          observer: '_setReadOnly'
+        },
+        /**
+         *  Share the content of the Ace editor using [Yjs](https://github.com/y-js/yjs) and [y-element](https://github.com/y-js/y-element). E.g.
+         *
+         * ```
+<y-element
+  connector-name="websockets-client"
+  connector-room="ace-testing"
+  db-name="memory">
+  <y-type
+    name="text"
+    type="Text"
+    data="{{yText}}"></y-type>
+</y-element>
+<ace-element y-text="{{yText}}"></ace-element>
+         * ```
+         */
+        yText: {
+          type: Object,
+          notify: true,
+          observer: 'bindYText'
+        },
+        /**
+         * Whether to show invisible characters
+         */
+        showInvisibles: {
+          type: Boolean,
+          notify: true,
+          observer: '_setShowInvisibles'
+        },
+        /**
+         * Whether to show line numbers
+         */
+        showLineNumbers: {
+          type: Boolean,
+          notify: true,
+          observer: '_setShowLineNumbers'
+        },
+        /**
+         * Whether to enable line wrapping
+         */
+        wrap: {
+          type: Boolean,
+          notify: true,
+          observer: '_setWrap'
+        },
+        /**
+         * Whether to highlight the active line
+         */
+        highlightActiveLine: {
+          type: Boolean,
+          notify: true,
+          observer: '_setHighlightActiveLine'
+        }
+      },
+      _setHighlightActiveLine: function () {
+        if (this.ace != null && this.highlightActiveLine != null) {
+          this.ace.setHighlightActiveLine(this.highlightActiveLine)
+        }
+      },
+      _setWrap: function () {
+        if (this.ace != null && this.wrap != null) {
+          this.ace.getSession().setUseWrapMode(this.wrap)
+        }
+      },
+      _setShowLineNumbers: function () {
+        if (this.ace != null && this.showLineNumbers != null) {
+          this.ace.renderer.setShowGutter(this.showLineNumbers)
+        }
+      },
+      _setShowInvisibles: function () {
+        if (this.ace != null && this.showInvisibles != null) {
+          this.ace.setShowInvisibles(this.showInvisibles)
+        }
+      },
+      _setTheme: function () {
+        if (this.ace != null && this.theme != null && this.theme.length > 0) {
+          this.ace.setTheme('ace/theme/' + this.theme)
+        }
+      },
+      _setMode: function () {
+        if (this.ace != null && this.mode != null) {
+          this.ace.getSession().setMode('ace/mode/' + this.mode)
+        }
+      },
+      _setFontSize: function () {
+        if (this.ace != null && this.fontSize != null) {
+          this.ace.setFontSize(this.fontSize)
+        }
+      },
+      _setReadOnly: function () {
+        if (this.ace != null && this.readOnly != null) {
+          this.ace.setReadOnly(this.readOnly)
+        }
+      },
+      /**
+       * Bind this editor to a [Y.Text](https://github.com/y-js/y-text) type
+       */
+      bindYText: function (ytext) {
+        if (ytext != null) {
+          if (ytext.type != null) {
+            ytext = ytext.type
+          }
+          if (this.ace != null) {
+            ytext.unbindAceAll()
+            ytext.bindAce(this.ace)
+          }
+        } else if (this.ace != null && this.ace.yTextBinding != null) {
+          this.ace.yTextBinding.unbindAceAll()
+        }
+      }
+    });
+  </script>
+</dom-module>
