@@ -25,6 +25,11 @@
 
     <style is="custom-style" include="demo-pages-shared-styles">
     </style>
+    <style>
+      .vertical-section-container {
+        max-width: 600px !important;
+      }
+    </style>
   </head>
   <body>
     <div class="vertical-section-container centered">
@@ -37,7 +42,7 @@
               height: 120px;
             }
           </style>
-          <ace-element>Initial Content</ace-element>
+          <ace-element theme="chrome" mode="javascript">alert('initial content')</ace-element>
         </template>
       </demo-snippet>
     </div>
@@ -62,8 +67,8 @@
               <paper-item label="html">HTML</paper-item>
             </paper-listbox>
           </paper-dropdown-menu>
-          <paper-toggle-button checked="{{showLineNumbers}}">
-            Show line numbers
+          <paper-toggle-button checked="{{showGutter}}">
+            Show gutter (line numbers)
           </paper-toggle-button>
           <paper-toggle-button checked="{{showInvisibles}}">
             Show invisible characters
@@ -79,7 +84,7 @@
           <ace-element
             theme="{{theme}}"
             mode="{{mode}}"
-            show-line-numbers="{{showLineNumbers}}"
+            show-gutter="{{showGutter}}"
             show-invisibles="{{showInvisibles}}"
             highlight-active-line="{{highlightActiveLine}}"
             wrap="{{wrap}}"

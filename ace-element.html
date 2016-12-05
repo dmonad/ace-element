@@ -50,10 +50,11 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
         if (this.yText != null) {
           this.bindYText(this.yText)
         }
+        this._setHighlightActiveLine()
         this._setTheme()
         this._setMode()
         this._setShowInvisibles()
-        this._setShowLineNumbers()
+        this._setShowGutter()
         this._setFontSize()
         this._setReadOnly()
       },
