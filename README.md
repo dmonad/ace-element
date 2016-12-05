@@ -1,12 +1,12 @@
 # \<ace-element\>
-
-Polymer Web Component of the awesome [Ace](https://ace.c9.io/#nav=about) editor! - [Read the docs](https://dmonad.github.io/ace-element/)
+> Polymer Web Component of the awesome [Ace](https://ace.c9.io/#nav=about) editor! - [Read the docs](https://dmonad.github.io/ace-element/)
 
 ```
 bower i --save ace-element
 ```
 
-```
+```html
+<link rel="import" href="/bower_components/ace-element/ace-element.html">
 <ace-element>
   console.log('Ace rocks!')
 </ace-element>
