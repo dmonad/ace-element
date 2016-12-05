@@ -2,6 +2,13 @@
   "name": "ace-element",
   "description": "Polymer Web Component of the awesome ACE editor!",
   "main": "ace-element.html",
+  "keywords": [
+    "web-components"
+  ],
+  "license": "MIT",
+  "authors": [
+    "Kevin Jahns <kevin.jahns@rwth-aachen.de>"
+  ],
   "dependencies": {
     "polymer": "Polymer/polymer#^1.4.0",
     "ace-builds": "^1.2.6"
