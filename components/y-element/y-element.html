@@ -1,0 +1,586 @@
+<link rel="import" href="../polymer/polymer.html">
+<script src="../yjs/y.js"></script>
+<script src="../y-array/y-array.js"></script>
+<script src="../y-map/y-map.js"></script>
+
+<!--
+# &lt;y-element&gt;
+Polymer Web Component for sharing data with [Yjs](https://github.com/y-js/yjs/)
+
+@demo demo/index.html
+-->
+
+<dom-module id="y-element">
+  <template>
+    <style>
+      :host {
+        display: none;
+      }
+    </style>
+    <content></content>
+  </template>
+
+  <script>
+    Polymer({
+      queueReload: function () {
+        var self = this
+        if (this.isReady && !this._reloading) {
+          // try to reload in next tick
+          this.cancelAsync(this._asyncHandler)
+          this._asyncHandler = this.async(function () {
+            self.reload();
+            // stop any remaining async procs
+            this.cancelAsync(self._asyncHandler)
+            self._asyncHandler = null
+          })
+        } else {
+          // reload when _reloading is finished
+          this._performReload = true
+        }
+      },
+      reload: function () {
+        var self = this
+        if (!this.isReady || this._reloading || this.closed) {
+          return
+        }
+        this._reloading = true
+        this._performReload = false
+        this.connector = this.connector || {}
+        if (this.connectorName != null) {
+          this.connector.name = this.connectorName
+        }
+        if (this.connectorRoom != null) {
+          this.connector.room = this.connectorRoom
+        }
+        if (this.connectorAuth != null) {
+          this.connector.auth = this.connectorAuth
+        }
+        if (this.connectorUrl != null) {
+          this.connector.url = this.connectorUrl
+        }
+        if (this.connectorDebug != null) {
+          this.connector.debug = this.connectorDebug
+        }
+        this.db = this.db || {}
+        if (this.dbName != null) {
+          this.db.name = this.dbName
+        }
+        try {
+          if (this.connector.room == null) {
+            throw null
+          }
+          var share = {}
+          for (var i = 0; i < this.children.length; i++) {
+            var node = this.children[i]
+            if (node._sharedPropertyReady != null && node._sharedPropertyRemoved != null) {
+              if (node.name == null) {
+                throw new Error('You must specify the "name" property on type definitions!')
+              }
+              share[node.name] = node.type
+            } else {
+              throw new Error('<y-element> must only contain valid configurations. The element <' + node.nodeName + '> is not recognized as a valid configuration for <y-element>!')
+            }
+          }
+          if (Object.keys(share).length === 0) {
+            throw new Error('You did not specify shared properties!')
+          }
+          var createInstance = function () {
+            Y({
+              db: self.db,
+              connector: self.connector,
+              share: share,
+              sourceDir: '/bower_components/'
+            }).then(function (y) {
+              if (self.y != null) {
+                debugger
+                self.y.close()
+              }
+              self.y = y
+              self._reloading = false
+              if (!self.connected) {
+                self.y.disconnect()
+              }
+              if (self.closed) {
+                self.close()
+              } else {
+                for (var i = 0; i < self.children.length; i++) {
+                  var node = self.children[i]
+                  if (node._sharedPropertyReady != null) {
+                    node._sharedPropertyReady(y.share[node.name])
+                  }
+                }
+                // now the next iteration can begin (if there is any)
+                if (self._performReload) {
+                  self.reload()
+                }
+              }
+            })
+          }
+          this.close().then(createInstance)
+          
+          this._performReload = false
+          this._reloading = true
+        } catch (err) {
+          this._reloading = false
+          this._performReload = false
+          if (err != null) {
+            throw err
+          }
+        }
+      },
+      ready: function () {
+        var self = this
+        this.y = null
+        this._reloading = false
+        this._performReload = false
+        this._whenClosed = Promise.resolve()
+        this.async(function () {
+          self.isReady = true
+          self.queueReload()
+        })
+      },
+      attached: function () {
+        this.closed = false
+      },
+      detached: function () {
+        this.closed = true
+      },
+      _connectedChanged: function (connected) {
+        if (this.y != null) {
+          if (connected) {
+            this.y.reconnect()
+          } else {
+            this.y.disconnect()
+          }
+        }
+      },
+      is: 'y-element',
+      properties: {
+        connected: {
+          type: Boolean,
+          notify: true,
+          value: true,
+          observer: '_connectedChanged'
+        },
+        connector: {
+          type: Object,
+          notify: true,
+          observer: 'queueReload'
+        },
+        connectorName: {
+          type: String,
+          notify: true,
+          observer: 'queueReload'
+        },
+        connectorAuth: {
+          type: String,
+          notify: true,
+          observer: 'queueReload'
+        },
+        connectorRoom: {
+          type: String,
+          notify: true,
+          observer: 'queueReload'
+        },
+        connectorUrl: {
+          type: String,
+          notify: true,
+          observer: 'queueReload'
+        },
+        connectorDebug: {
+          type: Boolean,
+          notify: true,
+          observer: 'queueReload',
+          value: false
+        },
+        db: {
+          type: Object,
+          notify: true,
+          observer: 'queueReload'
+        },
+        dbName: {
+          type: String,
+          notify: true,
+          observer: 'queueReload'
+        },
+        closed: {
+          type: Boolean,
+          notify: true,
+          observer: 'close',
+          value: false
+        }
+      },
+      open: function (open) {
+        return this.close(!(open == null) || !open)
+      },
+      close: function (close) {
+        if (close == null || close === true) {
+          if (this.y != null) {
+            // cleanup if an instance was already created
+            for (var i = 0; i < this.children.length; i++) {
+              var node = this.children[i]
+              if (node._sharedPropertyRemoved != null) {
+                node._sharedPropertyRemoved()
+              }
+            }
+            this._whenClosed = this.y.close()
+            this.y = null
+          }
+          return this._whenClosed
+        } else {
+          this.queueReload()
+          return Promise.resolve()
+        }
+      }
+    })
+  </script>
+</dom-module>
+
+<script>
+  Y.utils.PolymerBehaviors = Y.utils.Polymer || {}
+  Y.utils.PolymerBehaviors.SharedType = Y.utils.PolymerBehaviors.SharedType || {
+    properties: {
+      name: {
+        type: String,
+        notify: true
+      },
+      data: {
+        type: Object,
+        notify: true
+      },
+      type: {
+        type: String,
+        notify: true
+      }
+    }
+  }
+  Y.utils.PolymerBehaviors.SharedNativeType = Y.utils.PolymerBehaviors.SharedNativeType || [Y.utils.PolymerBehaviors.SharedType, {
+    observers: [
+      '_onDataChange(data.*)'
+    ],
+    _onDataChange: function (change) {
+      var self = this
+      // Array -> Y.Array, Object -> Y.Map, otherwise return val
+      function getConvertType (val) {
+        if (val != null && val.constructor === Array) {
+          return Y.Array
+        } else if (val != null && val.constructor === Object) {
+          return Y.Map
+        } else {
+          return val
+        }
+      }
+      // copies values from val to type
+      function fillType (type, val) {
+        var v, t
+        if (val != null && val.constructor === Array) {
+          type.insert(0, val.map(getConvertType))
+          for (var i = 0; i < val.length; i++) {
+            t = type.get(i)
+            v = val[i]
+            fillType(t, v)
+            if (v.typeDefinition != null) {
+              val[i] = { type: t }
+            }
+          }
+        } else if (val != null && val.constructor === Object) {
+          for (var name in val) {
+            v = val[name]
+            type.set(name, getConvertType(v))
+            t = type.get(name)
+            fillType(t, v)
+            if (v.typeDefinition != null) {
+              val[name] = { type: t }
+            }
+          }
+        } else {
+          return // already filled
+        }
+      }
+      if (change.value instanceof Y.utils.CustomType) {
+        // We can safely ignore this (don't wanna catch this anyway)
+        return
+      }
+      this._mutualExcluse(function () {
+        var i
+        if (change) {
+          var path = change.path.split('.').slice(1) // convert from "data.#1.pname" to ['#1', 'pname']
+          // Think of the last element in path as the action:
+          // E.g. let path = ['prop', 'sub']
+          // -> it means to set 'sub' on the 'prop' subproperty. I.e. self.data.prop.set('sub', change.value)
+          var type = self.sharedType
+          for (i = 0; i + 1 < path.length; i++) {
+            var route = path[i]
+            if (i === path.length - 1 && route === 'splices') {
+              break
+            } else if (route.startsWith('#')) {
+              type = type.get(Number.parseInt(route.slice(1)))
+            } else {
+              type = type.get(route)
+            }
+          }
+          var action = path[i]
+          if (action === 'length') {
+            return // ignore
+          } else if (action === 'splices') {
+            change.value.indexSplices.forEach(function (s) {
+              if (s.removed.length > 0) {
+                type.delete(s.index, s.removed.length)
+              }
+              for (var i = 0; i < s.addedCount; i++) {
+                var val = s.object[s.index + i]
+                type.insert(s.index + i, [getConvertType(val)])
+                var t = type.get(s.index + i)
+                fillType(t, val)
+                if (val.typeDefinition != null) {
+                  s.object[s.index + i] = { type: t }
+                }
+              }
+            })
+          } else if (action.startsWith('#')) {
+            debugger // ignore this? we already handle splices
+          } else {
+            var val = change.value
+            type.set(action, getConvertType(val))
+            var t = type.get(action)
+            fillType(t, val)
+            if (val.typeDefinition != null) {
+              var p = change.path.split('.').slice(0, -1).map(function (o) {
+                if (o[0] === '#') {
+                  return o.slice(1)
+                } else {
+                  return o
+                }
+              }).join('.')
+              var obj = self.get(p)
+              obj[action] = { type: t }
+            }
+          }
+        }
+      })
+    },
+    _addObserver: function (path, type) {
+      if (type && type.constructor === Y.Array.typeDefinition.class) {
+        return this._addObserverToYArray(path, type)
+      } else if (type && type.constructor === Y.Map.typeDefinition.class) {
+        return this._addObserverToYMap(path, type)
+      } else if (type instanceof Y.utils.CustomType) {
+        return { type: type } // Add a type wrapper
+      } else {
+        return type
+      }
+    },
+    _addObserverToYArray: function (path, yarray) {
+      var self = this
+      yarray.observe(function (event) {
+        self._mutualExcluse(function () {
+          if (event.type === 'delete') {
+            self.splice(path, event.index, event.length)
+          } else if (event.type === 'insert') {
+            var values = event.values.map(function (v, i) {
+              return self._addObserver(path + '.' + i, v)
+            })
+            self.splice.apply(self, [path, event.index, 0].concat(values))
+          }
+        })
+      })
+      return yarray.toArray().map(function (val, i) {
+        return self._addObserver(path + '.' + i, val)
+      })
+    },
+    _addObserverToYMap: function (path, ymap) {
+      var self = this
+      ymap.observe(function (event) {
+        self._mutualExcluse(function () {
+          var p = path + '.' + event.name
+          if (event.type === 'update' || event.type === 'add') {
+            self.set(p, self._addObserver(p, event.value))
+          } else if (event.type === 'delete') {
+            // wait for Polymer/polymer#2631 Set to null instead of deleting for now
+            self.set(p, null)
+          }
+        })
+      })
+      var keys = ymap.keys()
+      var result = {}
+      for (var i = 0; i < keys.length; i++) {
+        var key = keys[i]
+        var val = ymap.get(key)
+        result[key] = self._addObserver(path + '.' + i, val)
+      }
+      return result
+    }
+  }]
+</script>
+
+<!--
+`y-array`
+Configuration for a shared array property
+
+@demo demo/index.html 
+-->
+<!--
+`y-type`
+Configuration for any shared type.
+Since Polymer does not allow custom types to be exported, the data property exports an Object: `{ "type" : type }`
+
+@demo demo/index.html 
+-->
+<dom-module id="y-type">
+  <template>
+    <style>
+      :host {
+        display: none;
+      }
+    </style>
+  </template>
+
+  <script>
+    Polymer({
+      ready: function () {
+      },
+      is: 'y-type',
+      behaviors: [Y.utils.PolymerBehaviors.SharedType],
+
+      properties: {
+      },
+      _sharedPropertyRemoved: function () {
+        this.sharedType = null
+        this.data = null
+      },
+      _sharedPropertyReady: function (type) {
+        this.sharedType = type
+        this.data = { type: type }
+      }
+    });
+  </script>
+</dom-module>
+
+<!--
+`y-array`
+Configuration for a shared array property
+
+@demo demo/index.html 
+-->
+<dom-module id="y-array">
+  <template>
+    <style>
+      :host {
+        display: none;
+      }
+    </style>
+  </template>
+
+  <script>
+    Polymer({
+      ready: function () {
+        // every instance should create its own mutualExcluse function / have a private token
+        var token = true
+        this._mutualExcluse = function mutualExcluse (f) {
+          if (token) {
+            token = false
+            try {
+              f()
+            } catch (e) {
+              token = true
+              throw new Error(e)
+            }
+            token = true
+          }
+        }
+      },
+      is: 'y-array',
+      behaviors: [Y.utils.PolymerBehaviors.SharedNativeType],
+
+      properties: {
+        data: {
+          type: Array,
+          notify: true
+        },
+        type: {
+          type: String,
+          value: 'Array',
+          readOnly: true
+        }
+      },
+      _sharedPropertyRemoved: function () {
+        this.sharedType = null
+        this._mutualExcluse(function () {
+          this.data = null
+        })
+      },
+      _sharedPropertyReady: function (array) {
+        var self = this
+        this.sharedType = array
+        this._mutualExcluse(function () {
+          self.data = self._addObserverToYArray('data', array)
+        })
+      }
+    })
+  </script>
+</dom-module>
+
+<!--
+`y-map`
+Configuration for a shared map property
+
+@demo demo/index.html 
+-->
+<dom-module id="y-map">
+  <template>
+    <style>
+      :host {
+        display: none;
+      }
+    </style>
+  </template>
+
+  <script>
+    Polymer({
+      ready: function () {
+        // every instance should create its own mutualExcluse function / have a private token
+        var token = true
+        this._mutualExcluse = function mutualExcluse (f) {
+          if (token) {
+            token = false
+            try {
+              f()
+            } catch (e) {
+              token = true
+              throw new Error(e)
+            }
+            token = true
+          }
+        }
+      },
+      is: 'y-map',
+      behaviors: [Y.utils.PolymerBehaviors.SharedNativeType],
+
+      properties: {
+        data: {
+          type: Object,
+          notify: true
+        },
+        type: {
+          type: String,
+          value: 'Map',
+          readOnly: true
+        }
+      },
+      _sharedPropertyRemoved: function () {
+        this.sharedType = null
+        this._mutualExcluse(function () {
+          this.data = null
+        })
+      },
+      _sharedPropertyReady: function (map) {
+        var self = this
+        this.sharedType = map
+        this._mutualExcluse(function () {
+          self.data = self._addObserverToYMap('data', map)
+        })
+      }
+    })
+  </script>
+</dom-module>
+
