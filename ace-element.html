@@ -27,11 +27,10 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
       :host {
         position: relative;
         display: block;
-        height: 100px;
+        min-height: 100px;
         width: 100%;
       }
-      
-      #editorContainer {
+      .absoluteHeight {
         position: absolute;
         top: 0;
         right: 0;
@@ -57,6 +56,7 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
         this._setShowGutter()
         this._setFontSize()
         this._setReadOnly()
+        this._setDynamicHeight()
       },
       detached: function () {
         if (this.ace != null && this.ace.yTextBinding != null) {
@@ -65,6 +65,15 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
       },
       is: 'ace-element',
       properties: {
+        /**
+         * If set, the element will grow when the number of lines increases
+         */
+        dynamicHeight: {
+          type: Boolean,
+          value: false,
+          notify: true,
+          observer: '_setDynamicHeight'
+        },
         /**
          * The Ace theme. E.g. Ambiance, Chrome, ..
          * List of all themes [here](https://github.com/ajaxorg/ace/tree/master/lib/ace/theme)
@@ -133,6 +142,7 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
         showGutter: {
           type: Boolean,
           notify: true,
+          value: true,
           observer: '_setShowGutter'
         },
         /**
@@ -141,6 +151,7 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
         wrap: {
           type: Boolean,
           notify: true,
+          value: false,
           observer: '_setWrap'
         },
         /**
@@ -149,7 +160,19 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
         highlightActiveLine: {
           type: Boolean,
           notify: true,
+          value: true,
           observer: '_setHighlightActiveLine'
+        }
+      },
+      _setDynamicHeight: function () {
+        if (this.ace != null) {
+          if (this.dynamicHeight) {
+            this.ace.setOption('maxLines', Infinity)
+            this.$.editorContainer.classList.remove('absoluteHeight')
+          } else {
+            this.ace.setOption('maxLines', null)
+            this.$.editorContainer.classList.add('absoluteHeight')
+          }
         }
       },
       _setHighlightActiveLine: function () {
@@ -178,7 +201,7 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
         }
       },
       _setMode: function () {
-        if (this.ace != null && this.mode != null) {
+        if (this.ace != null && this.mode != null && this.mode.length > 0) {
           this.ace.getSession().setMode('ace/mode/' + this.mode)
         }
       },
