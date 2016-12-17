@@ -1,6 +1,7 @@
 <link rel="import" href="../polymer/polymer.html">
 
 <script type="text/javascript" src="../ace-builds/src-min-noconflict/ace.js"></script>
+<link rel="import" href="../iron-resizable-behavior/iron-resizable-behavior.html">
 
 <!--
 # &lt;ace-element&gt;  <iframe src="https://ghbtns.com/github-btn.html?user=dmonad&repo=ace-element&type=star&count=true" frameborder="0" scrolling="0" width="170px" height="20px"></iframe>
@@ -57,6 +58,10 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
         this._setReadOnly()
         this._setDynamicHeight()
         this._setWrap()
+        var self = this
+        this.addEventListener('iron-resize', function () {
+          self.ace.resize()
+        })
       },
       detached: function () {
         if (this.ace != null && this.ace.yTextBinding != null) {
@@ -64,6 +69,7 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
         }
       },
       is: 'ace-element',
+      behaviors: [Polymer.IronResizableBehavior],
       properties: {
         /**
          * If set, the element will grow when the number of lines increases
