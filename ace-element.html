@@ -223,7 +223,10 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
       /**
        * Bind this editor to a [Y.Text](https://github.com/y-js/y-text) type
        */
-      bindYText: function (ytext) {
+      bindYText: function (ytext, old) {
+        if (old != null && old.type != null && old.type.unbindAll != null) {
+          old.type.unbindAceAll()
+        }
         if (ytext != null) {
           if (ytext.type != null) {
             ytext = ytext.type
