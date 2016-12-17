@@ -53,7 +53,7 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
         this._setTheme()
         this._setMode()
         this._setShowInvisibles()
-        this._setShowGutter()
+        this._setHideGutter()
         this._setFontSize()
         this._setReadOnly()
         this._setDynamicHeight()
@@ -143,12 +143,12 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
           observer: '_setShowInvisibles'
         },
         /**
-         * Whether to show the gutter (show line numbers)
+         * Whether to hide the gutter (hide line numbers)
          */
-        showGutter: {
+        hideGutter: {
           type: Boolean,
           notify: true,
-          observer: '_setShowGutter'
+          observer: '_setHideGutter'
         },
         /**
          * Whether to enable line wrapping
@@ -190,9 +190,9 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
           this.ace.getSession().setUseWrapMode(this.wrap)
         }
       },
-      _setShowGutter: function () {
-        if (this.ace != null && this.showGutter != null) {
-          this.ace.renderer.setShowGutter(this.showGutter)
+      _setHideGutter: function () {
+        if (this.ace != null && this.hideGutter != null) {
+          this.ace.renderer.setShowGutter(!this.hideGutter)
         }
       },
       _setShowInvisibles: function () {

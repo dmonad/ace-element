@@ -70,8 +70,8 @@
               <paper-item label="html">HTML</paper-item>
             </paper-listbox>
           </paper-dropdown-menu>
-          <paper-toggle-button checked="{{showGutter}}">
-            Show gutter (line numbers)
+          <paper-toggle-button checked="{{hideGutter}}">
+            Hide gutter (line numbers)
           </paper-toggle-button>
           <paper-toggle-button checked="{{showInvisibles}}">
             Show invisible characters
@@ -90,7 +90,7 @@
           <ace-element
             theme="{{theme}}"
             mode="{{mode}}"
-            show-gutter="{{showGutter}}"
+            hide-gutter="{{hideGutter}}"
             show-invisibles="{{showInvisibles}}"
             highlight-active-line="{{highlightActiveLine}}"
             wrap="{{wrap}}"
