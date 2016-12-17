@@ -58,6 +58,7 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
         this._setReadOnly()
         this._setDynamicHeight()
         this._setWrap()
+        this._setPrintMarginColumn()
         var self = this
         this.addEventListener('iron-resize', function () {
           self.ace.resize()
@@ -131,7 +132,6 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
          */
         yText: {
           type: Object,
-          notify: true,
           observer: 'bindYText'
         },
         /**
@@ -139,7 +139,6 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
          */
         showInvisibles: {
           type: Boolean,
-          notify: true,
           observer: '_setShowInvisibles'
         },
         /**
@@ -147,7 +146,6 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
          */
         hideGutter: {
           type: Boolean,
-          notify: true,
           observer: '_setHideGutter'
         },
         /**
@@ -155,7 +153,6 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
          */
         wrap: {
           type: Boolean,
-          notify: true,
           value: false,
           observer: '_setWrap'
         },
@@ -164,9 +161,15 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
          */
         highlightActiveLine: {
           type: Boolean,
-          notify: true,
           value: true,
           observer: '_setHighlightActiveLine'
+        },
+        /**
+         * Set -1 to not show the print margin
+         */
+        printMarginColumn: {
+          type: Number,
+          observer: '_setPrintMarginColumn'
         }
       },
       _setDynamicHeight: function () {
@@ -218,6 +221,11 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
       _setReadOnly: function () {
         if (this.ace != null && this.readOnly != null) {
           this.ace.setReadOnly(this.readOnly)
+        }
+      },
+      _setPrintMarginColumn: function () {
+        if (this.ace != null && this.printMarginColumn != null) {
+          this.ace.setPrintMarginColumn(this.printMarginColumn)
         }
       },
       /**
