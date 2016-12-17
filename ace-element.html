@@ -56,6 +56,7 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
         this._setFontSize()
         this._setReadOnly()
         this._setDynamicHeight()
+        this._setWrap()
       },
       detached: function () {
         if (this.ace != null && this.ace.yTextBinding != null) {
