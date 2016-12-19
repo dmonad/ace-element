@@ -59,6 +59,8 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
         this._setDynamicHeight()
         this._setWrap()
         this._setPrintMarginColumn()
+        this._setTabSize()
+        this._setSoftTabs()
         var self = this
         this.addEventListener('iron-resize', function () {
           self.ace.resize()
@@ -170,6 +172,24 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
         printMarginColumn: {
           type: Number,
           observer: '_setPrintMarginColumn'
+        },
+        softTabs: {
+          type: Boolean,
+          observer: '_setSoftTabs'
+        },
+        tabSize: {
+          type: Number,
+          observer: '_setTabSize'
+        }
+      },
+      _setTabSize: function () {
+        if (this.ace != null && this.tabSize != null) {
+          this.ace.getSession().setTabSize(this.tabSize)
+        }
+      },
+      _setSoftTabs: function () {
+        if (this.ace != null && this.softTabs != null) {
+          this.ace.getSession().setUseSoftTabs(this.softTabs)
         }
       },
       _setDynamicHeight: function () {

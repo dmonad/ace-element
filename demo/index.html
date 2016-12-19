@@ -85,6 +85,9 @@
           <paper-toggle-button checked="{{readOnly}}">
             Set read-only
           </paper-toggle-button>
+          <paper-toggle-button checked="{{softTabs}}">
+            Use soft tabs
+          </paper-toggle-button>
           Font size: <paper-slider min="12" max="24" immediate-value="{{fontSize}}" pin></paper-slider>
 
           <ace-element
@@ -96,6 +99,8 @@
             wrap="{{wrap}}"
             font-size="{{fontSize}}"
             read-only="{{readOnly}}"
+            soft-tabs="{{softTabs}}"
+            tab-size="4"
           >console.log('Configure me :)')</ace-element>
         </template>
       </demo-snippet>
