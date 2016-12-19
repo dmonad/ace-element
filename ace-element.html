@@ -45,6 +45,7 @@ document.querySelector('ace-element').ace.setTheme('ace/mode/javascript')
     Polymer({
       ready: function () {
         this.ace = ace.edit(this.$.editorContainer)
+        this.ace.setOption('minLines', 5)
         var self = this
         if (this.yText != null) {
           this.bindYText(this.yText)
